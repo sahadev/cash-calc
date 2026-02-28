@@ -71,4 +71,22 @@ export default defineConfig([
   },
 ])
 ```
-# cash-calc
+# CashCalc 薪资计算器
+
+支持全国 10 城的专业薪资计算器，含五险一金、个税、年终奖、薪资结构转换、跨城对比等。
+
+## 开发
+
+```bash
+# 前端
+npm run dev
+
+# 后端（可选，用于云端分享）
+cd backend && npm run dev
+```
+
+配置 `VITE_API_BASE=http://localhost:8787` 启用「链接」分享功能。
+
+## 后端
+
+见 [backend/README.md](backend/README.md) — Hono + Cloudflare Workers + D1。

@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import type { AnnualSummary as Summary, SalaryInput } from '../types/salary';
 import { exportAsImage, exportAsPDF, exportAsExcel, generateShareCard, generateVerticalPoster } from '../utils/exportUtils';
 import { generateNaturalLanguageSummary } from '../utils/summaryText';
+import { saveRecord, isApiEnabled } from '../utils/api';
 
 interface Props {
   summary: Summary;
@@ -46,6 +47,9 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
               >
                 海报
               </button>
+              {isApiEnabled() && (
+                <ShareLinkButton input={input} summary={s} />
+              )}
             </>
           )}
           <button
@@ -122,13 +126,13 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
                 outerRadius={65}
                 paddingAngle={2}
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
               >
                 <Cell fill="#10b981" />
                 <Cell fill="#f87171" />
                 <Cell fill="#fb923c" />
               </Pie>
-              <Tooltip formatter={(v: number) => fmt(v) + ' 元'} />
+              <Tooltip formatter={(v: number | undefined) => (v != null ? fmt(v) + ' 元' : '')} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -148,7 +152,7 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
               <Tooltip
                 contentStyle={{ background: 'var(--c-card)', border: '1px solid var(--c-border-2)', borderRadius: '8px', fontSize: '12px' }}
                 labelStyle={{ color: 'var(--c-text-3)' }}
-                formatter={(v: number) => fmt(v) + ' 元'}
+                formatter={(v: number | undefined) => (v != null ? fmt(v) + ' 元' : '')}
               />
               <Bar dataKey="到手" fill="#10b981" radius={[3, 3, 0, 0]} />
               <Bar dataKey="个税" fill="#fb923c" radius={[3, 3, 0, 0]} />
@@ -230,6 +234,34 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
       {/* AI 友好的自然语言摘要 */}
       {input && <NaturalSummary input={input} summary={s} />}
     </div>
+  );
+}
+
+function ShareLinkButton({ input, summary }: { input: SalaryInput; summary: Summary }) {
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleClick = async () => {
+    if (loading) return;
+    setLoading(true);
+    setDone(false);
+    const res = await saveRecord(input as unknown as Record<string, unknown>, summary as unknown as Record<string, unknown>);
+    setLoading(false);
+    if (res?.url) {
+      await navigator.clipboard.writeText(res.url);
+      setDone(true);
+      setTimeout(() => setDone(false), 2000);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-sky-500/20 text-sky-600 dark:text-sky-400 text-xs hover:bg-sky-500/30 active:bg-sky-500/30 transition-colors ring-1 ring-sky-500/30 disabled:opacity-50"
+    >
+      {loading ? '...' : done ? '已复制' : '链接'}
+    </button>
   );
 }
 

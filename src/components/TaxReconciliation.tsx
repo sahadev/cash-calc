@@ -7,10 +7,6 @@ function fmt(n: number): string {
   return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function fmtW(n: number): string {
-  return (n / 10000).toFixed(2) + '万';
-}
-
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }

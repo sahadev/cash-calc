@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import type { SalaryInput } from './types/salary';
 import type { CityId } from './data/cityPolicies';
@@ -20,6 +20,7 @@ const TaxReconciliation = lazy(() => import('./components/TaxReconciliation'));
 const CityLanding = lazy(() => import('./components/CityLanding'));
 const ArticlePage = lazy(() => import('./components/ArticlePage'));
 const SearchLanding = lazy(() => import('./components/SearchLanding'));
+const SharedRecordViewer = lazy(() => import('./components/SharedRecordViewer'));
 
 const defaultInput: SalaryInput = {
   monthlyBase: 10000,
@@ -64,6 +65,14 @@ export default function App() {
     setInput({ ...savedInput, city: savedInput.city || 'beijing' });
     navigate('/');
   };
+
+  useEffect(() => {
+    const state = location.state as { loadShared?: { input: SalaryInput } } | null;
+    if (state?.loadShared?.input) {
+      setInput({ ...state.loadShared.input, city: state.loadShared.input.city || 'beijing' });
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   const currentPolicy = getCityPolicy(input.city);
   const activePath = location.pathname;
@@ -166,6 +175,7 @@ export default function App() {
           <Route path="/tax-recon" element={<Suspense fallback={<Loading />}><TaxReconciliation /></Suspense>} />
           <Route path="/city" element={<Suspense fallback={<Loading />}><CityLanding /></Suspense>} />
           <Route path="/city/:cityId" element={<Suspense fallback={<Loading />}><CityLanding /></Suspense>} />
+          <Route path="/s/:id" element={<Suspense fallback={<Loading />}><SharedRecordViewer /></Suspense>} />
           <Route path="/q" element={<Suspense fallback={<Loading />}><SearchLanding /></Suspense>} />
           <Route path="/q/:query" element={<Suspense fallback={<Loading />}><SearchLanding /></Suspense>} />
           <Route path="/guide" element={<Suspense fallback={<Loading />}><ArticlePage /></Suspense>} />

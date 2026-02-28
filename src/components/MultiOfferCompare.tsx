@@ -4,7 +4,7 @@ import { calcStructureBreakdown } from '../utils/converter';
 import { getCityPolicy } from '../data/cityPolicies';
 import StructureInput from './StructureInput';
 
-const ACCENT_COLORS = ['amber', 'emerald', 'sky', 'violet'] as const;
+const ACCENT_COLORS: ('amber' | 'emerald')[] = ['amber', 'emerald'];
 const LABELS = ['Offer A', 'Offer B', 'Offer C', 'Offer D'];
 
 function fmtW(n: number): string {
@@ -107,7 +107,7 @@ export default function MultiOfferCompare() {
               onChange={(v) => updateOffer(i, v as SalaryStructure)}
               showMonthlyBase={true}
               label={LABELS[i]}
-              accentColor={i < 2 ? ACCENT_COLORS[i] : ACCENT_COLORS[i % 2]}
+              accentColor={ACCENT_COLORS[i % 2]}
             />
           </div>
         ))}

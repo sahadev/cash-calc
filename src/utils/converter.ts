@@ -76,7 +76,6 @@ export function calcStructureBreakdown(structure: SalaryStructure): StructureBre
   // 3. 计算正规渠道收入（用于计税）
   const officialMonthly = round2(monthlyBase * (1 - altChannelRatio / 100));
   const officialAnnual = round2(officialMonthly * months);
-  const officialSalaryPart = round2(officialMonthly * 12);
   const officialBonusPart = round2(officialMonthly * Math.max(0, months - 12));
 
   // 4. 累计预扣法计算 12 个月工资个税

@@ -1,0 +1,15 @@
+name = "cash-calc-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "cash-calc-db"
+database_id = "placeholder"  # 部署时运行 wrangler d1 create cash-calc-db 获取真实 ID 并替换
+
+# 本地开发使用 wrangler dev，D1 自动使用 .wrangler/state 中的本地库
+
+# 变量（可选）
+[vars]
+ENVIRONMENT = "production"
