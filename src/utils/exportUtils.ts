@@ -252,6 +252,191 @@ export async function generateShareCard(summary: AnnualSummary, input: SalaryInp
   link.click();
 }
 
+/**
+ * 竖版海报（1080×1440, 3:4 比例，小红书/抖音友好）
+ */
+export async function generateVerticalPoster(summary: AnnualSummary, input: SalaryInput): Promise<void> {
+  const { getCityPolicy } = await import('../data/cityPolicies');
+  const policy = getCityPolicy(input.city);
+
+  const canvas = document.createElement('canvas');
+  const dpr = 2;
+  const w = 540;
+  const h = 720;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(dpr, dpr);
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const bg = isDark ? '#09090b' : '#fafaf9';
+  const cardBg = isDark ? '#18181b' : '#ffffff';
+  const textPrimary = isDark ? '#e4e4e7' : '#18181b';
+  const textSecondary = isDark ? '#a1a1aa' : '#52525b';
+  const textTertiary = isDark ? '#71717a' : '#a1a1aa';
+  const amber = '#f59e0b';
+  const emerald = '#10b981';
+  const violet = '#8b5cf6';
+  const orange = '#f97316';
+  const sky = '#0ea5e9';
+  const rose = '#f43f5e';
+  const borderColor = isDark ? '#27272a' : '#e5e5e5';
+
+  const fmt = (n: number) => n.toLocaleString('zh-CN', { maximumFractionDigits: 0 });
+  const fmtW = (n: number) => (n / 10000).toFixed(2) + '万';
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Top gradient bar
+  const grad = ctx.createLinearGradient(0, 0, w, 0);
+  grad.addColorStop(0, '#d97706');
+  grad.addColorStop(0.5, '#f59e0b');
+  grad.addColorStop(1, '#d97706');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, 5);
+
+  // Header
+  let y = 40;
+  ctx.font = 'bold 28px -apple-system, sans-serif';
+  ctx.fillStyle = amber;
+  ctx.fillText('Cash', 32, y);
+  const cashW = ctx.measureText('Cash').width;
+  ctx.fillStyle = textSecondary;
+  ctx.fillText('Calc', 32 + cashW, y);
+  ctx.font = '14px -apple-system, sans-serif';
+  ctx.fillStyle = textTertiary;
+  ctx.textAlign = 'right';
+  ctx.fillText('薪资计算器', w - 32, y);
+  ctx.textAlign = 'left';
+
+  // Title line
+  y += 28;
+  ctx.font = '13px -apple-system, sans-serif';
+  ctx.fillStyle = textSecondary;
+  ctx.fillText(`${policy.shortName} · 月Base ${fmt(input.monthlyBase)} · ${input.totalMonths}薪 · 公积金${input.housingFundRate}%`, 32, y);
+
+  // Divider
+  y += 16;
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(32, y);
+  ctx.lineTo(w - 32, y);
+  ctx.stroke();
+
+  // Big hero number
+  y += 32;
+  ctx.font = '12px -apple-system, sans-serif';
+  ctx.fillStyle = textTertiary;
+  ctx.fillText('月均到手', 32, y);
+  y += 36;
+  ctx.font = 'bold 42px -apple-system, sans-serif';
+  ctx.fillStyle = emerald;
+  ctx.fillText(fmt(Math.round(summary.totalNetCash / 12)) + ' 元', 32, y);
+
+  y += 20;
+  ctx.font = '13px -apple-system, sans-serif';
+  ctx.fillStyle = textSecondary;
+  ctx.fillText(`全年到手 ${fmtW(summary.totalNetCash)}`, 32, y);
+
+  // Main stats cards (2x2)
+  y += 28;
+  const cw = (w - 64 - 16) / 2;
+  const ch = 72;
+  const mainStats = [
+    { label: '综合价值', value: fmtW(summary.totalValue), color: amber },
+    { label: '全年个税', value: fmtW(summary.totalTax), color: orange },
+    { label: '公积金(双边)', value: fmtW(summary.totalHousingFund), color: violet },
+    { label: '养老金(双边)', value: fmtW(summary.totalPension), color: sky },
+  ];
+
+  for (let i = 0; i < mainStats.length; i++) {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const cx = 32 + col * (cw + 16);
+    const cy = y + row * (ch + 12);
+
+    roundedRect(ctx, cx, cy, cw, ch, 12, cardBg);
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.roundRect(cx, cy, cw, ch, 12);
+    ctx.stroke();
+
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.fillStyle = textTertiary;
+    ctx.fillText(mainStats[i].label, cx + 16, cy + 24);
+    ctx.font = 'bold 22px -apple-system, sans-serif';
+    ctx.fillStyle = mainStats[i].color;
+    ctx.fillText(mainStats[i].value, cx + 16, cy + 54);
+  }
+
+  // Breakdown section
+  y += ch * 2 + 12 + 24;
+  roundedRect(ctx, 32, y, w - 64, 180, 12, cardBg);
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.roundRect(32, y, w - 64, 180, 12);
+  ctx.stroke();
+
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.fillStyle = amber;
+  ctx.fillText('收支明细', 48, y + 24);
+
+  const items = [
+    { label: '税前总收入', value: fmtW(summary.totalGrossIncome), color: textPrimary },
+    { label: '  工资(12个月)', value: fmtW(summary.totalSalaryGross), color: textSecondary },
+    { label: '  年终奖', value: fmtW(summary.bonusGross), color: textSecondary },
+    { label: '五险一金(个人)', value: '-' + fmtW(summary.totalPersonalInsurance), color: rose },
+    { label: '个税合计', value: '-' + fmtW(summary.totalTax), color: orange },
+    { label: '全年到手', value: fmtW(summary.totalNetCash), color: emerald },
+  ];
+
+  for (let i = 0; i < items.length; i++) {
+    const iy = y + 46 + i * 22;
+    const isLast = i === items.length - 1;
+
+    if (isLast) {
+      ctx.strokeStyle = borderColor;
+      ctx.beginPath();
+      ctx.moveTo(48, iy - 10);
+      ctx.lineTo(w - 48, iy - 10);
+      ctx.stroke();
+    }
+
+    ctx.font = isLast ? 'bold 12px -apple-system, sans-serif' : '12px -apple-system, sans-serif';
+    ctx.fillStyle = isLast ? textPrimary : textSecondary;
+    ctx.fillText(items[i].label, 48, iy);
+
+    ctx.font = isLast ? 'bold 13px monospace' : '12px monospace';
+    ctx.fillStyle = items[i].color;
+    const valWidth = ctx.measureText(items[i].value).width;
+    ctx.fillText(items[i].value, w - 48 - valWidth, iy);
+  }
+
+  // Footer
+  y = h - 40;
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.fillStyle = textTertiary;
+  const footerText = 'cashcalc.cn';
+  const footerW2 = ctx.measureText(footerText).width;
+  ctx.fillText(footerText, (w - footerW2) / 2, y);
+
+  y += 16;
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.fillStyle = textTertiary;
+  const subText = '扫码试算你的薪资 ↗';
+  const subW = ctx.measureText(subText).width;
+  ctx.fillText(subText, (w - subW) / 2, y);
+
+  const link = document.createElement('a');
+  link.download = 'cashcalc-poster.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);

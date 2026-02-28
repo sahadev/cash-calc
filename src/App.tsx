@@ -19,6 +19,7 @@ const MultiOfferCompare = lazy(() => import('./components/MultiOfferCompare'));
 const TaxReconciliation = lazy(() => import('./components/TaxReconciliation'));
 const CityLanding = lazy(() => import('./components/CityLanding'));
 const ArticlePage = lazy(() => import('./components/ArticlePage'));
+const SearchLanding = lazy(() => import('./components/SearchLanding'));
 
 const defaultInput: SalaryInput = {
   monthlyBase: 10000,
@@ -165,6 +166,8 @@ export default function App() {
           <Route path="/tax-recon" element={<Suspense fallback={<Loading />}><TaxReconciliation /></Suspense>} />
           <Route path="/city" element={<Suspense fallback={<Loading />}><CityLanding /></Suspense>} />
           <Route path="/city/:cityId" element={<Suspense fallback={<Loading />}><CityLanding /></Suspense>} />
+          <Route path="/q" element={<Suspense fallback={<Loading />}><SearchLanding /></Suspense>} />
+          <Route path="/q/:query" element={<Suspense fallback={<Loading />}><SearchLanding /></Suspense>} />
           <Route path="/guide" element={<Suspense fallback={<Loading />}><ArticlePage /></Suspense>} />
           <Route path="/guide/:slug" element={<Suspense fallback={<Loading />}><ArticlePage /></Suspense>} />
           <Route path="/history" element={
@@ -177,6 +180,7 @@ export default function App() {
 
         <footer className="mt-8 sm:mt-12 pt-4 sm:pt-6 border-t border-b1 text-[11px] sm:text-xs text-t6 space-y-3">
           <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+            <Link to="/q" className="hover:text-amber-500 transition-colors">薪资速算</Link>
             <Link to="/city" className="hover:text-amber-500 transition-colors">城市速查</Link>
             <Link to="/guide" className="hover:text-amber-500 transition-colors">实用攻略</Link>
             <Link to="/guide/bonus-tax" className="hover:text-amber-500 transition-colors">年终奖计税</Link>

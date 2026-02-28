@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import type { AnnualSummary as Summary, SalaryInput } from '../types/salary';
-import { exportAsImage, exportAsPDF, exportAsExcel, generateShareCard } from '../utils/exportUtils';
+import { exportAsImage, exportAsPDF, exportAsExcel, generateShareCard, generateVerticalPoster } from '../utils/exportUtils';
 import { generateNaturalLanguageSummary } from '../utils/summaryText';
 
 interface Props {
@@ -33,12 +33,20 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
             存档
           </button>
           {input && (
-            <button
-              onClick={() => generateShareCard(s, input)}
-              className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs hover:bg-emerald-500/30 active:bg-emerald-500/30 transition-colors ring-1 ring-emerald-500/30"
-            >
-              分享
-            </button>
+            <>
+              <button
+                onClick={() => generateShareCard(s, input)}
+                className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs hover:bg-emerald-500/30 active:bg-emerald-500/30 transition-colors ring-1 ring-emerald-500/30"
+              >
+                分享
+              </button>
+              <button
+                onClick={() => generateVerticalPoster(s, input)}
+                className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pink-500/20 text-pink-600 dark:text-pink-400 text-xs hover:bg-pink-500/30 active:bg-pink-500/30 transition-colors ring-1 ring-pink-500/30"
+              >
+                海报
+              </button>
+            </>
           )}
           <button
             onClick={() => exportAsImage('annual-summary-content')}
