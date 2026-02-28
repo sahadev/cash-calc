@@ -2,6 +2,82 @@
 
 @theme {
   --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, monospace;
+
+  --color-page: var(--c-page);
+  --color-card: var(--c-card);
+  --color-card-alt: var(--c-card-alt);
+  --color-elevated: var(--c-elevated);
+  --color-inset: var(--c-inset);
+  --color-hover: var(--c-hover);
+
+  --color-t1: var(--c-text);
+  --color-t2: var(--c-text-2);
+  --color-t3: var(--c-text-3);
+  --color-t4: var(--c-text-4);
+  --color-t5: var(--c-text-5);
+  --color-t6: var(--c-text-6);
+
+  --color-b1: var(--c-border);
+  --color-b2: var(--c-border-2);
+  --color-b3: var(--c-border-3);
+}
+
+/* ===== Light Mode (default) ===== */
+:root {
+  --c-page: #ffffff;
+  --c-card: #ffffff;
+  --c-card-alt: #f8f8f8;
+  --c-elevated: #f4f4f5;
+  --c-inset: #fafafa;
+  --c-hover: #e4e4e7;
+
+  --c-text: #18181b;
+  --c-text-2: #3f3f46;
+  --c-text-3: #52525b;
+  --c-text-4: #71717a;
+  --c-text-5: #a1a1aa;
+  --c-text-6: #d4d4d8;
+
+  --c-border: #e4e4e7;
+  --c-border-2: #d4d4d8;
+  --c-border-3: rgba(212, 212, 216, 0.5);
+
+  --c-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --c-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+
+  --c-input-bg: #ffffff;
+  --c-input-border: #d4d4d8;
+  --c-input-text: #18181b;
+  --c-input-placeholder: #a1a1aa;
+}
+
+/* ===== Dark Mode ===== */
+.dark {
+  --c-page: #09090b;
+  --c-card: rgba(24, 24, 27, 0.8);
+  --c-card-alt: rgba(24, 24, 27, 0.5);
+  --c-elevated: #27272a;
+  --c-inset: rgba(39, 39, 42, 0.4);
+  --c-hover: #3f3f46;
+
+  --c-text: #e4e4e7;
+  --c-text-2: #d4d4d8;
+  --c-text-3: #a1a1aa;
+  --c-text-4: #71717a;
+  --c-text-5: #52525b;
+  --c-text-6: #3f3f46;
+
+  --c-border: #27272a;
+  --c-border-2: #3f3f46;
+  --c-border-3: rgba(63, 63, 70, 0.5);
+
+  --c-shadow: none;
+  --c-shadow-sm: none;
+
+  --c-input-bg: #27272a;
+  --c-input-border: #3f3f46;
+  --c-input-text: #e4e4e7;
+  --c-input-placeholder: #52525b;
 }
 
 body {
@@ -12,15 +88,22 @@ body {
 
 .input-field {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--color-zinc-700);
-  background: var(--color-zinc-800);
-  color: var(--color-zinc-200);
-  font-size: 0.875rem;
+  border: 1px solid var(--c-input-border);
+  background: var(--c-input-bg);
+  color: var(--c-input-text);
+  font-size: 1rem;
   font-variant-numeric: tabular-nums;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+@media (min-width: 640px) {
+  .input-field {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
 }
 
 .input-field:focus {
@@ -29,7 +112,7 @@ body {
 }
 
 .input-field::placeholder {
-  color: var(--color-zinc-600);
+  color: var(--c-input-placeholder);
 }
 
 /* Hide number input spinner */
@@ -40,6 +123,19 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Card shadow for light mode */
+.card-shadow {
+  box-shadow: var(--c-shadow);
+}
+.card-shadow-sm {
+  box-shadow: var(--c-shadow-sm);
+}
+
+/* Safe area for iOS bottom bar */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @keyframes animate-in {
@@ -54,4 +150,12 @@ input[type="number"] {
 }
 .animate-in {
   animation: animate-in 0.2s ease-out;
+}
+
+.ad-container {
+  overflow: hidden;
+  text-align: center;
+}
+.ad-container ins {
+  background: transparent;
 }

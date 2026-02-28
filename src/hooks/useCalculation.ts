@@ -14,5 +14,8 @@ export function useCalculation(input: SalaryInput): AnnualSummary | null {
     input.socialInsuranceBase,
     input.housingFundBase,
     input.bonusTaxMode,
+    input.city,
+    input.supplementHFRate,
+    input.enterpriseAnnuityRate,
   ]);
 }

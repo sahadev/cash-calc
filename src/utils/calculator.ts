@@ -5,15 +5,8 @@ import type {
   BonusTaxResult,
   AnnualSummary,
 } from '../types/salary';
-import {
-  SOCIAL_INSURANCE_BASE,
-  HOUSING_FUND_BASE,
-  PERSONAL_RATES,
-  EMPLOYER_RATES,
-  BASIC_DEDUCTION_MONTHLY,
-  TAX_BRACKETS,
-  BONUS_TAX_BRACKETS,
-} from './constants';
+import type { CityPolicy } from '../data/cityPolicies';
+import { getCityPolicy, TAX_BRACKETS, BONUS_TAX_BRACKETS, BASIC_DEDUCTION_MONTHLY } from '../data/cityPolicies';
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -37,11 +30,12 @@ function calcInsuranceBase(
 export function calcPersonalInsurance(
   siBase: number,
   hfBase: number,
-  hfRate: number
+  hfRate: number,
+  policy: CityPolicy
 ): InsuranceBreakdown {
-  const pension = round2(siBase * PERSONAL_RATES.pension);
-  const medical = round2(siBase * PERSONAL_RATES.medical);
-  const unemployment = round2(siBase * PERSONAL_RATES.unemployment);
+  const pension = round2(siBase * policy.socialInsurance.personal.pension);
+  const medical = round2(siBase * policy.socialInsurance.personal.medical);
+  const unemployment = round2(siBase * policy.socialInsurance.personal.unemployment);
   const housingFund = round2(hfBase * (hfRate / 100));
   return {
     pension,
@@ -55,12 +49,13 @@ export function calcPersonalInsurance(
 export function calcEmployerInsurance(
   siBase: number,
   hfBase: number,
-  hfRate: number
+  hfRate: number,
+  policy: CityPolicy
 ) {
-  const pension = round2(siBase * EMPLOYER_RATES.pension);
-  const medical = round2(siBase * EMPLOYER_RATES.medical);
-  const unemployment = round2(siBase * EMPLOYER_RATES.unemployment);
-  const injury = round2(siBase * EMPLOYER_RATES.injury);
+  const pension = round2(siBase * policy.socialInsurance.employer.pension);
+  const medical = round2(siBase * policy.socialInsurance.employer.medical);
+  const unemployment = round2(siBase * policy.socialInsurance.employer.unemployment);
+  const injury = round2(siBase * policy.socialInsurance.employer.injury);
   const housingFund = round2(hfBase * (hfRate / 100));
   return {
     pension,
@@ -99,10 +94,6 @@ export function calcBonusTaxSeparate(bonus: number): number {
   return round2(bonus * last.rate - last.deduction);
 }
 
-/**
- * Calculate the additional tax if bonus is combined into Dec cumulative income.
- * Returns the extra tax compared to without bonus.
- */
 function calcBonusTaxCombined(
   cumulativeTaxableIncomeWithoutBonus: number,
   bonus: number
@@ -121,21 +112,24 @@ export function calculateAll(input: SalaryInput): AnnualSummary {
     housingFundRate,
     additionalDeduction,
     bonusTaxMode,
+    city = 'beijing',
   } = input;
+
+  const policy = getCityPolicy(city);
 
   const siBase = calcInsuranceBase(
     monthlyBase,
     input.socialInsuranceBase,
-    SOCIAL_INSURANCE_BASE
+    policy.socialInsurance.base
   );
   const hfBase = calcInsuranceBase(
     monthlyBase,
     input.housingFundBase,
-    HOUSING_FUND_BASE
+    policy.housingFund.base
   );
 
-  const personalIns = calcPersonalInsurance(siBase, hfBase, housingFundRate);
-  const employerIns = calcEmployerInsurance(siBase, hfBase, housingFundRate);
+  const personalIns = calcPersonalInsurance(siBase, hfBase, housingFundRate, policy);
+  const employerIns = calcEmployerInsurance(siBase, hfBase, housingFundRate, policy);
 
   const monthlyDetails: MonthlyBreakdown[] = [];
   let cumulativeTaxableIncome = 0;
@@ -217,7 +211,15 @@ export function calculateAll(input: SalaryInput): AnnualSummary {
   const totalHousingFund = round2(
     totalHousingFundPersonal + totalHousingFundEmployer
   );
-  const totalValue = round2(totalNetCash + totalPension + totalHousingFund);
+
+  const supplementRate = input.supplementHFRate ?? 0;
+  const annuityRate = input.enterpriseAnnuityRate ?? 0;
+  const totalSupplementHF = round2(hfBase * (supplementRate / 100) * 2 * 12);
+  const totalEnterpriseAnnuity = round2(monthlyBase * (annuityRate / 100) * 2 * 12);
+
+  const totalValue = round2(
+    totalNetCash + totalPension + totalHousingFund + totalSupplementHF + totalEnterpriseAnnuity * 0.5
+  );
 
   return {
     totalGrossIncome,
@@ -237,5 +239,7 @@ export function calculateAll(input: SalaryInput): AnnualSummary {
     totalValue,
     bonusTaxResult,
     monthlyDetails,
+    totalSupplementHF: totalSupplementHF > 0 ? totalSupplementHF : undefined,
+    totalEnterpriseAnnuity: totalEnterpriseAnnuity > 0 ? totalEnterpriseAnnuity : undefined,
   };
 }

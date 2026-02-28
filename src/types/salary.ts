@@ -1,62 +1,69 @@
+import type { CityId } from '../data/cityPolicies';
+
 export interface SalaryInput {
   monthlyBase: number;
-  totalMonths: number; // e.g. 13, 14, 15
-  housingFundRate: number; // 5~12, default 12
-  additionalDeduction: number; // 专项附加扣除 月额
-  socialInsuranceBase?: number; // 自定义社保基数，留空则按月base夹在上下限内
-  housingFundBase?: number; // 自定义公积金基数
-  bonusTaxMode: 'separate' | 'combined' | 'auto'; // 年终奖计税方式
+  totalMonths: number;
+  housingFundRate: number;
+  additionalDeduction: number;
+  socialInsuranceBase?: number;
+  housingFundBase?: number;
+  bonusTaxMode: 'separate' | 'combined' | 'auto';
+  city: CityId;
+  supplementHFRate?: number;
+  enterpriseAnnuityRate?: number;
 }
 
 export interface InsuranceBreakdown {
-  pension: number; // 养老保险
-  medical: number; // 医疗保险
-  unemployment: number; // 失业保险
-  housingFund: number; // 住房公积金
+  pension: number;
+  medical: number;
+  unemployment: number;
+  housingFund: number;
   total: number;
 }
 
 export interface MonthlyBreakdown {
-  month: number; // 1~12
-  grossSalary: number; // 月应发工资
+  month: number;
+  grossSalary: number;
   socialInsuranceBase: number;
   housingFundBase: number;
   personalInsurance: InsuranceBreakdown;
   employerInsurance: InsuranceBreakdown & { injury: number };
-  taxableIncome: number; // 当月应纳税所得额
-  cumulativeTaxableIncome: number; // 累计应纳税所得额
-  cumulativeTax: number; // 累计应纳税额
-  monthlyTax: number; // 当月个税
-  netSalary: number; // 当月到手现金
+  taxableIncome: number;
+  cumulativeTaxableIncome: number;
+  cumulativeTax: number;
+  monthlyTax: number;
+  netSalary: number;
 }
 
 export interface BonusTaxResult {
   bonusAmount: number;
-  separateTax: number; // 单独计税税额
-  combinedTax: number; // 并入综合所得额外税额
+  separateTax: number;
+  combinedTax: number;
   recommendedMode: 'separate' | 'combined';
   separateNetBonus: number;
   combinedNetBonus: number;
 }
 
 export interface AnnualSummary {
-  totalGrossIncome: number; // 全年税前总收入（含年终奖）
-  totalSalaryGross: number; // 全年工资税前
-  bonusGross: number; // 年终奖税前
-  totalPersonalInsurance: number; // 全年五险一金个人缴纳
-  totalTax: number; // 全年个税（工资+年终奖）
-  salaryTax: number; // 工资个税
-  bonusTax: number; // 年终奖个税
-  totalNetCash: number; // 全年到手现金
-  totalPensionPersonal: number; // 养老金个人账户（个人部分）
-  totalPensionEmployer: number; // 养老金单位划入
-  totalHousingFundPersonal: number; // 公积金个人
-  totalHousingFundEmployer: number; // 公积金单位
-  totalPension: number; // 养老金合计
-  totalHousingFund: number; // 公积金合计
-  totalValue: number; // 综合到手价值
+  totalGrossIncome: number;
+  totalSalaryGross: number;
+  bonusGross: number;
+  totalPersonalInsurance: number;
+  totalTax: number;
+  salaryTax: number;
+  bonusTax: number;
+  totalNetCash: number;
+  totalPensionPersonal: number;
+  totalPensionEmployer: number;
+  totalHousingFundPersonal: number;
+  totalHousingFundEmployer: number;
+  totalPension: number;
+  totalHousingFund: number;
+  totalValue: number;
   bonusTaxResult: BonusTaxResult;
   monthlyDetails: MonthlyBreakdown[];
+  totalSupplementHF?: number;
+  totalEnterpriseAnnuity?: number;
 }
 
 export interface HistoryRecord {
@@ -65,4 +72,62 @@ export interface HistoryRecord {
   input: SalaryInput;
   summary: AnnualSummary;
   label?: string;
+}
+
+// ========== 薪资结构转换器类型 ==========
+
+export type SocialInsuranceBaseType = 'full' | 'minimum' | 'custom';
+
+export interface SalaryStructure {
+  city: CityId;
+  monthlyBase: number;
+  months: number;
+  socialInsuranceBaseType: SocialInsuranceBaseType;
+  customSocialInsuranceBase?: number;
+  housingFundBaseType: SocialInsuranceBaseType;
+  customHousingFundBase?: number;
+  housingFundRate: number;
+  altChannelRatio: number;
+  altChannelFeeRate: number;
+  annualStockValue: number;
+  stockDiscount: number;
+  specialDeduction: number;
+}
+
+/** 综合价值折价系数（系统预设） */
+export const VALUE_WEIGHTS = {
+  cash: 1.0,
+  housingFund: 1.0,
+  pension: 0.5,
+  medical: 0,
+  unemployment: 0,
+  workInjury: 0,
+} as const;
+
+export interface StructureBreakdown {
+  grossAnnual: number;
+  officialSalaryAnnual: number;
+  altChannelAnnual: number;
+  altChannelFee: number;
+  socialInsurancePersonal: number;
+  housingFundPersonal: number;
+  pensionPersonal: number;
+  incomeTax: number;
+  takeHomeCash: number;
+  socialInsuranceEmployer: number;
+  housingFundEmployer: number;
+  pensionEmployer: number;
+  employerTotalCost: number;
+  stockFaceValue: number;
+  stockValue: number;
+  comprehensiveValue: number;
+}
+
+export interface ConversionResult {
+  targetMonthlyBase: number;
+  currentBreakdown: StructureBreakdown;
+  targetBreakdown: StructureBreakdown;
+  raisePercent: number;
+  cashRaisePercent: number;
+  employerCostChangePercent: number;
 }

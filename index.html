@@ -3,10 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="theme-color" content="#f59e0b" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CashCalc - 北京薪资计算器</title>
+
+    <!-- AdSense (lazy-loaded, only if VITE_ADSENSE_CLIENT is set at build time) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" crossorigin="anonymous"></script>
+
+    <!-- SEO Meta -->
+    <title>CashCalc - 薪资计算器 | 五险一金/个税/年终奖/Offer对比</title>
+    <meta name="description" content="最专业的薪资计算器，支持北上广深杭蓉宁汉苏津10城。精确计算五险一金、个税、年终奖到手。独有薪资结构转换器，帮你对比不同Offer的真实综合价值。" />
+    <meta name="keywords" content="薪资计算器,工资计算,五险一金计算,个税计算,年终奖计税,到手工资,offer对比,薪资结构转换,跳槽涨薪,社保计算,公积金计算,北京工资,上海工资,杭州工资,成都工资,南京工资,武汉工资,苏州工资,天津工资" />
+    <meta name="author" content="CashCalc" />
+    <link rel="canonical" href="https://cashcalc.cn/" />
+
+    <!-- Open Graph / 微信分享 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CashCalc - 薪资结构转换器" />
+    <meta property="og:description" content="跳槽涨薪20%，新Offer月Base应该要多少？全额社保 vs 最低社保 + 避税渠道，一键换算综合价值。支持10城社保公积金政策。" />
+    <meta property="og:image" content="https://cashcalc.cn/og-cover.png" />
+    <meta property="og:url" content="https://cashcalc.cn/" />
+    <meta property="og:site_name" content="CashCalc" />
+    <meta property="og:locale" content="zh_CN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CashCalc - 薪资计算器" />
+    <meta name="twitter:description" content="支持10城的专业薪资计算器，含薪资结构转换、Offer对比、五险一金个税计算" />
+    <meta name="twitter:image" content="https://cashcalc.cn/og-cover.png" />
+
+    <!-- Schema.org 结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "CashCalc 薪资计算器",
+      "url": "https://cashcalc.cn",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "description": "支持北上广深杭蓉宁汉苏津10城的专业薪资计算器，含薪资结构转换、Offer对比、五险一金个税计算。基于综合价值（到手现金+公积金+养老金+股票）进行不同薪资结构间的等价换算。",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY"
+      },
+      "featureList": [
+        "北上广深杭蓉宁汉苏津10城五险一金计算",
+        "个税累计预扣法精确计算",
+        "年终奖单独计税vs并入综合所得对比",
+        "薪资结构转换器（全额社保vs最低社保+避税渠道）",
+        "综合价值评估（现金+公积金+养老金+股票）",
+        "跨城薪资对比（同一Offer在北上广深的到手差异）",
+        "多Offer并排对比（最多4个Offer同时比较）",
+        "年度汇算模拟（预估补税/退税金额）",
+        "分享卡片一键生成",
+        "月度明细展开查看完整计算过程",
+        "PDF/Excel/图片导出"
+      ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "北京月薪2万到手多少？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "北京月薪20000元，按全额社保公积金12%计算，五险一金个人缴纳约4460元/月，月个税约690元左右（前几个月较低，后几个月较高），月均到手约14850元，全年到手现金约17.8万元。可使用CashCalc精确计算。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "全额社保和最低社保差多少？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "以北京月薪25000元为例，全额社保公积金12%时，公积金双边每年约72000元，养老金双边约57600元；最低社保公积金5%时，公积金双边仅约3048元，养老金双边约13750元。综合价值差异可达每年9万元以上。CashCalc的薪资结构转换器可精确计算两种结构的等价换算。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "跳槽涨薪20%新Offer应该要多少月base？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "这取决于两家公司的薪资结构差异。如果新公司是最低社保+避税渠道，需要更高的月base来弥补公积金和养老金的损失。CashCalc的薪资结构转换器可以根据你的当前薪资和目标结构，自动反推新Offer应该给出的月base。"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
+    <script>
+      (function(){var t=localStorage.getItem('cashcalc-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches);if(d)document.documentElement.classList.add('dark');})();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
