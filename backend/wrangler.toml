@@ -6,7 +6,7 @@ compatibility_date = "2024-12-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "cash-calc-db"
-database_id = "placeholder"  # 部署时运行 wrangler d1 create cash-calc-db 获取真实 ID 并替换
+database_id = "aa9a5602-d4e3-484f-9aaf-e6701440df0e"  # 部署时运行 wrangler d1 create cash-calc-db 获取真实 ID 并替换
 
 # 本地开发使用 wrangler dev，D1 自动使用 .wrangler/state 中的本地库
 
