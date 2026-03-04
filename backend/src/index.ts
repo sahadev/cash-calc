@@ -8,15 +8,25 @@ type Env = {
 
 const app = new Hono<{ Bindings: Env }>();
 
+const ALLOWED_ORIGINS = [
+  'https://cashcalc.cn',
+  'https://www.cashcalc.cn',
+  'https://cash-calc.workers.dev',
+  'https://cash-calc.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
 app.use('*', cors({
-  origin: [
-    'https://cashcalc.cn',
-    'https://www.cashcalc.cn',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-  ],
+  origin: (origin) => {
+    if (!origin) return '*';
+    if (ALLOWED_ORIGINS.includes(origin)) return origin;
+    if (origin.endsWith('.vercel.app') || origin.endsWith('.workers.dev')) return origin;
+    return null;
+  },
   allowMethods: ['GET', 'POST', 'OPTIONS'],
   allowHeaders: ['Content-Type'],
+  maxAge: 86400,
 }));
 
 app.get('/api/v1/health', (c) => c.json({ ok: true, ts: Date.now() }));

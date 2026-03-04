@@ -120,5 +120,43 @@ cd backend && npm run dev
 
 ## 部署
 
-- **前端**：`npm run build`，将 `dist/` 部署到静态托管；构建时设置 `VITE_API_BASE` 指向后端 URL
-- **后端**：见 [backend/README.md](backend/README.md)
+### 前端（Vercel）
+
+```bash
+npm run build
+```
+
+- 部署到 Vercel，构建时需配置环境变量 `VITE_API_BASE`
+- 当前生产值：`VITE_API_BASE=https://cash-calc-api.cash-calc.workers.dev`
+- 线上地址：`https://cash-calc.vercel.app`
+
+> 注意：`VITE_API_BASE` 是构建时注入的，修改后需 Redeploy 才能生效。
+
+### 后端（Cloudflare Workers）
+
+```bash
+cd backend && pnpm run deploy
+```
+
+- Worker 名称：`cash-calc-api`（由 `wrangler.toml` 中 `name` 决定）
+- 线上地址：`https://cash-calc-api.cash-calc.workers.dev`
+- D1 数据库：`cash-calc-db`
+- 详细说明见 [backend/README.md](backend/README.md)
+
+### CORS 配置
+
+后端 CORS 白名单支持以下来源：
+
+| 来源 | 说明 |
+|------|------|
+| `https://cashcalc.cn` / `https://www.cashcalc.cn` | 自定义域名 |
+| `https://cash-calc.vercel.app` | Vercel 部署 |
+| `https://cash-calc.workers.dev` | Workers 域名 |
+| `*.vercel.app` / `*.workers.dev` | 通配匹配预览部署 |
+| `localhost:5173` / `127.0.0.1:5173` | 本地开发 |
+
+### 常见问题
+
+- **CORS 报错**：确认 `VITE_API_BASE` 指向正确的 Workers 域名（格式为 `https://<worker-name>.<account>.workers.dev`），而非 `https://<account>.workers.dev`
+- **修改环境变量后无效**：`VITE_API_BASE` 是构建时注入，需在 Vercel 上 Redeploy
+- **Worker 根路径 404**：正常，Worker 未定义 `/` 路由，可用 `/api/v1/health` 验证

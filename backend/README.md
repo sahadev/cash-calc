@@ -63,4 +63,12 @@ curl http://localhost:8787/api/v1/save/abc12345
 前端需配置 `VITE_API_BASE` 指向 API 地址，例如：
 
 - 开发：`http://localhost:8787`
-- 生产：`https://cash-calc-api.xxx.workers.dev`
+- 生产：`https://cash-calc-api.cash-calc.workers.dev`
+
+## CORS
+
+CORS 中间件使用动态 origin 匹配，支持：
+
+- 白名单精确匹配（`cashcalc.cn`、`cash-calc.vercel.app` 等）
+- 通配后缀匹配（`*.vercel.app`、`*.workers.dev`）
+- 预检缓存 24 小时（`maxAge: 86400`）
