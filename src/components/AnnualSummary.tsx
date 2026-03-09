@@ -132,7 +132,7 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
                 <Cell fill="#f87171" />
                 <Cell fill="#fb923c" />
               </Pie>
-              <Tooltip formatter={(v: number | undefined) => (v != null ? fmt(v) + ' 元' : '')} />
+              <Tooltip formatter={(v) => (v != null ? fmt(Number(v)) + ' 元' : '')} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -152,7 +152,7 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
               <Tooltip
                 contentStyle={{ background: 'var(--c-card)', border: '1px solid var(--c-border-2)', borderRadius: '8px', fontSize: '12px' }}
                 labelStyle={{ color: 'var(--c-text-3)' }}
-                formatter={(v: number | undefined) => (v != null ? fmt(v) + ' 元' : '')}
+                formatter={(v) => (v != null ? fmt(Number(v)) + ' 元' : '')}
               />
               <Bar dataKey="到手" fill="#10b981" radius={[3, 3, 0, 0]} />
               <Bar dataKey="个税" fill="#fb923c" radius={[3, 3, 0, 0]} />

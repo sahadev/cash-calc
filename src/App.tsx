@@ -90,6 +90,9 @@ export default function App() {
               <span className="text-t5 text-xs sm:text-sm font-normal ml-2 sm:ml-3">
                 薪资计算器
               </span>
+              <a href="https://kakacut.cn" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-t6 text-[10px] sm:text-xs font-normal ml-1.5 sm:ml-2 hover:text-amber-500 transition-colors">
+                KaKaCut 旗下产品
+              </a>
             </h1>
             <p className="text-t5 text-xs sm:text-sm mt-0.5 sm:mt-1 hidden sm:block">
               五险一金 · 个税 · 年终奖 · 结构转换 · 到手明细
@@ -200,6 +203,16 @@ export default function App() {
           <div className="text-center space-y-1">
             <p>数据基于{currentPolicy.name} {currentPolicy.policyYear} 年度社保/公积金政策</p>
             <p>社保 {currentPolicy.socialInsurance.base.min.toLocaleString()}~{currentPolicy.socialInsurance.base.max.toLocaleString()} · 公积金 {currentPolicy.housingFund.base.min.toLocaleString()}~{currentPolicy.housingFund.base.max.toLocaleString()} · 起征 5,000/月</p>
+          </div>
+          <div className="text-center pt-2 border-t border-b1 space-y-1">
+            <p>
+              <a href="https://kakacut.cn" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-colors">KaKaCut 咔咔剪</a>
+              {' · '}
+              <span>CashCalc 薪资计算器</span>
+            </p>
+            <p>
+              <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-colors">京ICP备2026010115号</a>
+            </p>
           </div>
         </footer>
       </div>
