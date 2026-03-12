@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import type { AnnualSummary as Summary, SalaryInput } from '../types/salary';
-import { exportAsImage, exportAsPDF, exportAsExcel, generateShareCard, generateVerticalPoster } from '../utils/exportUtils';
+import { exportAsImage, exportAsExcel, generateShareCard, generateVerticalPoster } from '../utils/exportUtils';
 import { generateNaturalLanguageSummary } from '../utils/summaryText';
 import { saveRecord, isApiEnabled } from '../utils/api';
 
@@ -53,19 +53,13 @@ export default function AnnualSummary({ summary: s, input, onSave }: Props) {
             </>
           )}
           <button
-            onClick={() => exportAsImage('annual-summary-content')}
+            onClick={() => exportAsImage('annual-summary-content', undefined, input)}
             className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-elevated text-t3 text-xs hover:bg-hover active:bg-hover transition-colors"
           >
             图片
           </button>
           <button
-            onClick={() => exportAsPDF('annual-summary-content')}
-            className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-elevated text-t3 text-xs hover:bg-hover active:bg-hover transition-colors"
-          >
-            PDF
-          </button>
-          <button
-            onClick={() => exportAsExcel(s)}
+            onClick={() => exportAsExcel(s, undefined, input)}
             className="px-2.5 py-2 sm:py-1.5 rounded-lg bg-elevated text-t3 text-xs hover:bg-hover active:bg-hover transition-colors"
           >
             Excel

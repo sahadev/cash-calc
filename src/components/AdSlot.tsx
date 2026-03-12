@@ -11,6 +11,23 @@ interface AdSlotProps {
 
 const AD_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT || '';
 
+declare global {
+  interface Window {
+    adsbygoogle?: Array<Record<string, unknown>>;
+    _adsenseLoaded?: boolean;
+  }
+}
+
+function loadAdSenseScript(client: string) {
+  if (window._adsenseLoaded) return;
+  window._adsenseLoaded = true;
+  const s = document.createElement('script');
+  s.async = true;
+  s.crossOrigin = 'anonymous';
+  s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+  document.head.appendChild(s);
+}
+
 const FORMAT_STYLES: Record<AdFormat, React.CSSProperties> = {
   horizontal: { display: 'block', minHeight: 90, width: '100%' },
   rectangle: { display: 'inline-block', width: 300, height: 250 },
@@ -18,24 +35,26 @@ const FORMAT_STYLES: Record<AdFormat, React.CSSProperties> = {
   fluid: { display: 'block', textAlign: 'center' as const },
 };
 
-declare global {
-  interface Window {
-    adsbygoogle?: Array<Record<string, unknown>>;
-  }
-}
-
 export default function AdSlot({ slot, format = 'horizontal', className = '', responsive = true }: AdSlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const pushed = useRef(false);
 
   useEffect(() => {
+    if (!AD_CLIENT) return;
+    loadAdSenseScript(AD_CLIENT);
+  }, []);
+
+  useEffect(() => {
     if (!AD_CLIENT || pushed.current) return;
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-      pushed.current = true;
-    } catch {
-      // AdSense not loaded or blocked
-    }
+    const timer = setTimeout(() => {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        pushed.current = true;
+      } catch {
+        // AdSense not loaded or blocked
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!AD_CLIENT) {

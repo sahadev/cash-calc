@@ -97,6 +97,17 @@ export default function App() {
             <p className="text-t5 text-xs sm:text-sm mt-0.5 sm:mt-1 hidden sm:block">
               五险一金 · 个税 · 年终奖 · 结构转换 · 到手明细
             </p>
+            <div className="mt-1.5 sm:mt-2 flex flex-wrap gap-1.5 sm:gap-2">
+              {[
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
           <button
             onClick={toggle}
@@ -209,6 +220,9 @@ export default function App() {
               <a href="https://kakacut.cn" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-colors">KaKaCut 咔咔剪</a>
               {' · '}
               <span>CashCalc 薪资计算器</span>
+            </p>
+            <p>
+              联系我们：<a href="mailto:sahadev@foxmail.com" className="hover:text-amber-500 transition-colors">sahadev@foxmail.com</a>
             </p>
             <p>
               <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-colors">京ICP备2026010115号</a>

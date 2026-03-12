@@ -1,60 +1,92 @@
+import QRCode from 'qrcode';
 import type { AnnualSummary, MonthlyBreakdown, SalaryInput } from '../types/salary';
+import { getCityPolicy } from '../data/cityPolicies';
 
-export async function exportAsImage(elementId: string, filename = 'cashcalc-result.png') {
-  const el = document.getElementById(elementId);
-  if (!el) return;
+function buildExportFilename(input: SalaryInput, suffix: string, ext: string): string {
+  const policy = getCityPolicy(input.city);
+  const base = Math.round(input.monthlyBase);
+  const months = input.totalMonths;
 
-  const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--c-page').trim() || '#ffffff';
+  const siBase = input.socialInsuranceBase;
+  const isFullSI = !siBase || siBase >= input.monthlyBase;
+  const siTag = isFullSI ? '全额' : '最低';
 
-  const html2canvas = (await import('html2canvas')).default;
-  const canvas = await html2canvas(el, {
-    backgroundColor: bgColor,
-    scale: 2,
-    logging: false,
-  });
+  const hfRate = input.housingFundRate;
 
-  const link = document.createElement('a');
-  link.download = filename;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+  const parts = [
+    `${policy.shortName}`,
+    `${base}base`,
+    `${months}薪`,
+    `${siTag}社保`,
+    `公积金${hfRate}%`,
+  ];
+  if (suffix) parts.push(suffix);
+
+  return parts.join('_') + '.' + ext;
 }
 
-export async function exportAsPDF(elementId: string, filename = 'cashcalc-report.pdf') {
+export async function exportAsImage(elementId: string, filename = 'cashcalc-result.png', input?: SalaryInput) {
   const el = document.getElementById(elementId);
   if (!el) return;
 
-  const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--c-page').trim() || '#ffffff';
+  try {
+    const { toPng } = await import('html-to-image');
+    const dataUrl = await toPng(el, {
+      pixelRatio: 2,
+      cacheBust: true,
+    });
 
-  const html2canvas = (await import('html2canvas')).default;
-  const { jsPDF } = await import('jspdf');
-
-  const canvas = await html2canvas(el, {
-    backgroundColor: bgColor,
-    scale: 2,
-    logging: false,
-  });
-
-  const imgData = canvas.toDataURL('image/png');
-  const imgWidth = canvas.width;
-  const imgHeight = canvas.height;
-
-  const pdfWidth = 210; // A4 mm
-  const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
-
-  const pdf = new jsPDF('p', 'mm', 'a4');
-  let yOffset = 0;
-  const pageHeight = 297; // A4 mm
-
-  while (yOffset < pdfHeight) {
-    if (yOffset > 0) pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, pdfHeight);
-    yOffset += pageHeight;
+    const link = document.createElement('a');
+    link.download = input ? buildExportFilename(input, '汇总', 'png') : filename;
+    link.href = dataUrl;
+    link.click();
+  } catch (e) {
+    console.error('exportAsImage failed:', e);
+    alert('图片导出失败，请重试');
   }
-
-  pdf.save(filename);
 }
 
-export async function exportAsExcel(summary: AnnualSummary, filename = 'cashcalc-detail.xlsx') {
+export async function exportAsPDF(elementId: string, filename = 'cashcalc-report.pdf', input?: SalaryInput) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  try {
+    const { toPng } = await import('html-to-image');
+    const { jsPDF } = await import('jspdf');
+
+    const dataUrl = await toPng(el, {
+      pixelRatio: 2,
+      cacheBust: true,
+    });
+
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+
+    const pdfWidth = 210; // A4 mm
+    const pdfHeight = (img.height * pdfWidth) / img.width;
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    let yOffset = 0;
+    const pageHeight = 297; // A4 mm
+
+    while (yOffset < pdfHeight) {
+      if (yOffset > 0) pdf.addPage();
+      pdf.addImage(dataUrl, 'PNG', 0, -yOffset, pdfWidth, pdfHeight);
+      yOffset += pageHeight;
+    }
+
+    pdf.save(input ? buildExportFilename(input, '报告', 'pdf') : filename);
+  } catch (e) {
+    console.error('exportAsPDF failed:', e);
+    alert('PDF导出失败，请重试');
+  }
+}
+
+export async function exportAsExcel(summary: AnnualSummary, filename = 'cashcalc-detail.xlsx', input?: SalaryInput) {
   const XLSX = await import('xlsx');
 
   const monthlyData = summary.monthlyDetails.map((m: MonthlyBreakdown) => ({
@@ -113,14 +145,14 @@ export async function exportAsExcel(summary: AnnualSummary, filename = 'cashcalc
   const ws2 = XLSX.utils.json_to_sheet(monthlyData);
   XLSX.utils.book_append_sheet(wb, ws2, '月度明细');
 
-  XLSX.writeFile(wb, filename);
+  XLSX.writeFile(wb, input ? buildExportFilename(input, '明细', 'xlsx') : filename);
 }
 
 export async function generateShareCard(summary: AnnualSummary, input: SalaryInput): Promise<void> {
   const canvas = document.createElement('canvas');
   const dpr = 2;
   const w = 375;
-  const h = 520;
+  const h = 580;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   const ctx = canvas.getContext('2d')!;
@@ -237,17 +269,52 @@ export async function generateShareCard(summary: AnnualSummary, input: SalaryInp
     ctx.fillText(item.value, w - 40 - valW, iy);
   }
 
-  // Footer watermark
-  y = h - 28;
+  // Footer with QR code
+  const shareQrSize = 56;
+  const shareFooterY = h - shareQrSize - 24;
+
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(24, shareFooterY - 10);
+  ctx.lineTo(w - 24, shareFooterY - 10);
+  ctx.stroke();
+
+  // QR code (right side)
+  const shareQrDataUrl = await QRCode.toDataURL('https://calc.kakacut.cn/', {
+    width: shareQrSize * dpr,
+    margin: 0,
+    color: {
+      dark: isDark ? '#e4e4e7' : '#18181b',
+      light: '#00000000',
+    },
+  });
+  const shareQrImg = new Image();
+  await new Promise<void>((resolve) => {
+    shareQrImg.onload = () => resolve();
+    shareQrImg.src = shareQrDataUrl;
+  });
+  const shareQrX = w - 24 - shareQrSize;
+  roundedRect(ctx, shareQrX - 4, shareFooterY - 4, shareQrSize + 8, shareQrSize + 8, 6, cardBg);
+  ctx.drawImage(shareQrImg, shareQrX, shareFooterY, shareQrSize, shareQrSize);
+
+  // Text (left side)
+  const shareTextCenterY = shareFooterY + shareQrSize / 2;
+  ctx.font = 'bold 11px -apple-system, sans-serif';
+  ctx.fillStyle = textPrimary;
+  ctx.fillText('扫码试算你的薪资', 24, shareTextCenterY - 8);
   ctx.font = '10px -apple-system, sans-serif';
+  ctx.fillStyle = amber;
+  ctx.fillText('calc.kakacut.cn', 24, shareTextCenterY + 10);
+
+  // Tagline text below URL
+  ctx.font = '9px -apple-system, sans-serif';
   ctx.fillStyle = textTertiary;
-  const footerText = 'cashcalc.cn · 专业薪资计算器';
-  const footerW = ctx.measureText(footerText).width;
-  ctx.fillText(footerText, (w - footerW) / 2, y);
+  ctx.fillText('求职谈薪 · HR核算 · 跳槽比薪', 24, shareTextCenterY + 24);
 
   // Download
   const link = document.createElement('a');
-  link.download = 'cashcalc-share.png';
+  link.download = buildExportFilename(input, '分享', 'png');
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
@@ -262,7 +329,7 @@ export async function generateVerticalPoster(summary: AnnualSummary, input: Sala
   const canvas = document.createElement('canvas');
   const dpr = 2;
   const w = 540;
-  const h = 720;
+  const h = 800;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   const ctx = canvas.getContext('2d')!;
@@ -297,7 +364,7 @@ export async function generateVerticalPoster(summary: AnnualSummary, input: Sala
   ctx.fillRect(0, 0, w, 5);
 
   // Header
-  let y = 40;
+  let y = 36;
   ctx.font = 'bold 28px -apple-system, sans-serif';
   ctx.fillStyle = amber;
   ctx.fillText('Cash', 32, y);
@@ -416,23 +483,62 @@ export async function generateVerticalPoster(summary: AnnualSummary, input: Sala
     ctx.fillText(items[i].value, w - 48 - valWidth, iy);
   }
 
-  // Footer
-  y = h - 40;
-  ctx.font = '11px -apple-system, sans-serif';
-  ctx.fillStyle = textTertiary;
-  const footerText = 'cashcalc.cn';
-  const footerW2 = ctx.measureText(footerText).width;
-  ctx.fillText(footerText, (w - footerW2) / 2, y);
+  // Footer with QR code
+  const qrSize = 80;
+  const footerY = h - qrSize - 32;
 
-  y += 16;
+  // Divider above footer
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(32, footerY - 12);
+  ctx.lineTo(w - 32, footerY - 12);
+  ctx.stroke();
+
+  // QR code (right side)
+  const qrUrl = 'https://calc.kakacut.cn/';
+  const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+    width: qrSize * dpr,
+    margin: 0,
+    color: {
+      dark: isDark ? '#e4e4e7' : '#18181b',
+      light: '#00000000',
+    },
+  });
+  const qrImg = new Image();
+  await new Promise<void>((resolve) => {
+    qrImg.onload = () => resolve();
+    qrImg.src = qrDataUrl;
+  });
+  const qrX = w - 32 - qrSize;
+  const qrY = footerY;
+  roundedRect(ctx, qrX - 6, qrY - 6, qrSize + 12, qrSize + 12, 8, cardBg);
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.roundRect(qrX - 6, qrY - 6, qrSize + 12, qrSize + 12, 8);
+  ctx.stroke();
+  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+  // Text (left side, vertically centered with QR)
+  const textX = 32;
+  const textCenterY = qrY + qrSize / 2;
+
+  ctx.font = 'bold 13px -apple-system, sans-serif';
+  ctx.fillStyle = textPrimary;
+  ctx.fillText('扫码试算你的薪资', textX, textCenterY - 16);
+
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.fillStyle = amber;
+  ctx.fillText('calc.kakacut.cn', textX, textCenterY + 2);
+
+  // Tagline text below URL
   ctx.font = '10px -apple-system, sans-serif';
   ctx.fillStyle = textTertiary;
-  const subText = '扫码试算你的薪资 ↗';
-  const subW = ctx.measureText(subText).width;
-  ctx.fillText(subText, (w - subW) / 2, y);
+  ctx.fillText('求职谈薪好帮手 · HR薪酬核算利器 · 跳槽比薪一目了然', textX, textCenterY + 20);
 
   const link = document.createElement('a');
-  link.download = 'cashcalc-poster.png';
+  link.download = buildExportFilename(input, '海报', 'png');
   link.href = canvas.toDataURL('image/png');
   link.click();
 }

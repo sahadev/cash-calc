@@ -4,6 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    port: 3721,
+  },
+  preview: {
+    port: 4721,
+  },
   build: {
     rollupOptions: {
       output: {
